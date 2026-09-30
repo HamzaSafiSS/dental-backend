@@ -7,10 +7,6 @@ import lombok.NoArgsConstructor;
 
 import java.util.List;
 
-/**
- * Generic paginated response wrapper for list endpoints.
- * Wraps Spring Data Page results into a frontend-friendly format.
- */
 @Data
 @Builder
 @NoArgsConstructor

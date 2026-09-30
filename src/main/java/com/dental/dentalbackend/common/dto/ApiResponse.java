@@ -9,11 +9,6 @@ import lombok.NoArgsConstructor;
 import java.time.LocalDateTime;
 import java.util.List;
 
-/**
- * Standard API response wrapper used by all REST endpoints.
- * Provides a consistent structure: success flag, message, data payload,
- * error list, and timestamp.
- */
 @Data
 @Builder
 @NoArgsConstructor
