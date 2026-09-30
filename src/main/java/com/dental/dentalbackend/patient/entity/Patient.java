@@ -45,6 +45,9 @@ public class Patient extends BaseEntity {
     @Column(name = "state")
     private String state;
 
+    @Column(name = "zip_code")
+    private String zipCode;
+
     @Column(name = "blood_type")
     private String bloodType;
 
