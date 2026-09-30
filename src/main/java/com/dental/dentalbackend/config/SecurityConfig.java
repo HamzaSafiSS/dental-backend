@@ -11,11 +11,6 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.web.cors.CorsConfigurationSource;
 
-/**
- * Temporary security configuration for Phase 1.
- * Permits all requests so the app, Swagger UI, and Actuator endpoints are accessible.
- * This will be replaced with full JWT-based security in Phase 3.
- */
 @Configuration
 @EnableWebSecurity
 public class SecurityConfig {
