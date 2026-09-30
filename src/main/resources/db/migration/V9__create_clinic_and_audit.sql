@@ -1,8 +1,3 @@
--- ============================================================
--- V9: Clinic settings and audit logs
--- ============================================================
-
--- Clinic settings (single-row table for clinic information)
 CREATE TABLE clinic_settings (
     id                  UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     clinic_name         VARCHAR(255),

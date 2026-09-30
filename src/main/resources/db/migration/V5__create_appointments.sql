@@ -1,8 +1,3 @@
--- ============================================================
--- V5: Appointments, status history, and payment records
--- ============================================================
-
--- Appointments
 CREATE TABLE appointments (
     id                  UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     patient_id          UUID        NOT NULL,

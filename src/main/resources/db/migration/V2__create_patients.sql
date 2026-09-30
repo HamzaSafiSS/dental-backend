@@ -1,8 +1,3 @@
--- ============================================================
--- V2: Patient-related tables
--- ============================================================
-
--- Patient profiles linked 1:1 to users
 CREATE TABLE patients (
     id                  UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     user_id             UUID         NOT NULL,

@@ -1,9 +1,3 @@
--- ============================================================
--- V6: Clinical records — dental records, treatment plans,
---     prescriptions
--- ============================================================
-
--- Dental / clinical records
 CREATE TABLE dental_records (
     id                  UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     patient_id          UUID        NOT NULL,

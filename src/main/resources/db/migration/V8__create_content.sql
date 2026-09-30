@@ -1,8 +1,3 @@
--- ============================================================
--- V8: Content — Blog, FAQs, Reviews, Before/After cases
--- ============================================================
-
--- Blog categories
 CREATE TABLE blog_categories (
     id              UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     name            VARCHAR(200) NOT NULL,

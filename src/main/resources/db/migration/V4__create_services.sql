@@ -1,8 +1,3 @@
--- ============================================================
--- V4: Service categories and dental services
--- ============================================================
-
--- Service categories (General Dentistry, Cosmetic, Orthodontics, etc.)
 CREATE TABLE service_categories (
     id              UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     name            VARCHAR(200) NOT NULL,

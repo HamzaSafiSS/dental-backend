@@ -1,8 +1,3 @@
--- ============================================================
--- V3: Doctors, Doctor availability, Time-off, Staff profiles
--- ============================================================
-
--- Doctor profiles linked 1:1 to users
 CREATE TABLE doctors (
     id                  UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     user_id             UUID         NOT NULL,
