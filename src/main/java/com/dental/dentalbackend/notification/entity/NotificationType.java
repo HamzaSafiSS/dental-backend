@@ -1,0 +1,12 @@
+package com.dental.dentalbackend.notification.entity;
+
+public enum NotificationType {
+    APPOINTMENT_REQUESTED,
+    PAYMENT_REQUIRED,
+    APPOINTMENT_CONFIRMED,
+    APPOINTMENT_RESCHEDULED,
+    APPOINTMENT_CANCELLED,
+    APPOINTMENT_REMINDER,
+    PAYMENT_VERIFIED,
+    PAYMENT_REJECTED
+}
