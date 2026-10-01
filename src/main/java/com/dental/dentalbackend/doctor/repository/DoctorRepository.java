@@ -15,4 +15,6 @@ public interface DoctorRepository extends JpaRepository<Doctor, UUID> {
     Optional<Doctor> findByUserId(UUID userId);
 
     Page<Doctor> findAllByActiveTrue(Pageable pageable);
+
+    long countByActiveTrue();
 }

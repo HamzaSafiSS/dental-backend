@@ -54,4 +54,24 @@ public interface AppointmentRepository extends JpaRepository<Appointment, UUID> 
             LocalDate toDate,
             Pageable pageable
     );
+
+    long countByStatus(AppointmentStatus status);
+
+    long countByAppointmentDate(LocalDate date);
+
+    long countByAppointmentDateBetween(LocalDate startDate, LocalDate endDate);
+
+    @Query("SELECT a.status, COUNT(a) FROM Appointment a GROUP BY a.status")
+    List<Object[]> countAppointmentsByStatus();
+
+    @Query("SELECT a FROM Appointment a WHERE a.appointmentDate = :date ORDER BY a.startTime ASC")
+    List<Appointment> findTodayAppointments(LocalDate date);
+
+    @Query("""
+            SELECT a FROM Appointment a
+            WHERE a.appointmentDate >= :fromDate
+              AND a.status NOT IN (com.dental.dentalbackend.appointment.entity.AppointmentStatus.CANCELLED, com.dental.dentalbackend.appointment.entity.AppointmentStatus.NO_SHOW)
+            ORDER BY a.appointmentDate ASC, a.startTime ASC
+            """)
+    List<Appointment> findUpcomingAppointments(LocalDate fromDate, Pageable pageable);
 }
