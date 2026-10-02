@@ -21,11 +21,11 @@ public interface AppointmentPaymentRepository extends JpaRepository<AppointmentP
 
     Page<AppointmentPayment> findAllByPaymentStatus(PaymentStatus status, Pageable pageable);
 
-    @Query("SELECT COALESCE(SUM(p.amount), 0) FROM AppointmentPayment p WHERE p.paymentStatus = com.dental.dentalbackend.payment.entity.PaymentStatus.VERIFIED")
+    @Query("SELECT COALESCE(SUM(p.requiredAmount), 0) FROM AppointmentPayment p WHERE p.paymentStatus = com.dental.dentalbackend.payment.entity.PaymentStatus.VERIFIED")
     BigDecimal sumTotalVerifiedRevenue();
 
     @Query("""
-            SELECT COALESCE(SUM(p.amount), 0) FROM AppointmentPayment p
+            SELECT COALESCE(SUM(p.requiredAmount), 0) FROM AppointmentPayment p
             WHERE p.paymentStatus = com.dental.dentalbackend.payment.entity.PaymentStatus.VERIFIED
               AND p.verifiedAt >= :start
               AND p.verifiedAt <= :end

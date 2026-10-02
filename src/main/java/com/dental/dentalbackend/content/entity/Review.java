@@ -2,6 +2,8 @@ package com.dental.dentalbackend.content.entity;
 
 import com.dental.dentalbackend.common.entity.BaseEntity;
 import com.dental.dentalbackend.patient.entity.Patient;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
@@ -28,6 +30,7 @@ public class Review extends BaseEntity {
     private Patient patient;
 
     @Column(name = "rating", nullable = false)
+    @JdbcTypeCode(SqlTypes.SMALLINT)
     private int rating;
 
     @Column(name = "comment", columnDefinition = "TEXT")
