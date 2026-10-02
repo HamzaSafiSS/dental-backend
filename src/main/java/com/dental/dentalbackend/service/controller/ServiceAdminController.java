@@ -19,6 +19,10 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
+import com.dental.dentalbackend.storage.service.FileStorageService;
+import org.springframework.http.MediaType;
+import org.springframework.web.multipart.MultipartFile;
+
 import java.util.List;
 import java.util.UUID;
 
@@ -29,6 +33,7 @@ import java.util.UUID;
 public class ServiceAdminController {
 
     private final DentalServiceService dentalServiceService;
+    private final FileStorageService fileStorageService;
 
     // ── Categories ────────────────────────────────────────────────
 
@@ -39,8 +44,8 @@ public class ServiceAdminController {
         return ResponseEntity.ok(ApiResponse.success(categories));
     }
 
-    @PostMapping("/api/v1/service-categories")
-    @Operation(summary = "Create a new service category")
+    @PostMapping(value = "/api/v1/service-categories", consumes = MediaType.APPLICATION_JSON_VALUE)
+    @Operation(summary = "Create a new service category (JSON)")
     public ResponseEntity<ApiResponse<CategoryResponse>> createCategory(
             @Valid @RequestBody CreateCategoryRequest request,
             @AuthenticationPrincipal CustomUserDetails userDetails,
@@ -51,13 +56,57 @@ public class ServiceAdminController {
                 .body(ApiResponse.success("Category created successfully", response));
     }
 
-    @PutMapping("/api/v1/service-categories/{id}")
-    @Operation(summary = "Update a service category")
+    @PostMapping(value = "/api/v1/service-categories", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @Operation(summary = "Create a new service category with icon upload (Multipart)")
+    public ResponseEntity<ApiResponse<CategoryResponse>> createCategoryMultipart(
+            @ModelAttribute @Valid CreateCategoryRequest request,
+            @RequestParam(value = "icon", required = false) MultipartFile icon,
+            @RequestParam(value = "image", required = false) MultipartFile image,
+            @RequestParam(value = "file", required = false) MultipartFile file,
+            @RequestParam(value = "iconUrl", required = false) MultipartFile iconUrlFile,
+            @AuthenticationPrincipal CustomUserDetails userDetails,
+            HttpServletRequest httpRequest) {
+        MultipartFile uploadFile = icon != null ? icon :
+                (image != null ? image : (file != null ? file : iconUrlFile));
+        if (uploadFile != null && !uploadFile.isEmpty()) {
+            String storedUrl = fileStorageService.storeFile(uploadFile, "categories");
+            request.setIconUrl(storedUrl);
+        }
+        CategoryResponse response = dentalServiceService.createCategory(
+                request, userDetails.getUser().getId(), httpRequest);
+        return ResponseEntity.status(HttpStatus.CREATED)
+                .body(ApiResponse.success("Category created successfully", response));
+    }
+
+    @PutMapping(value = "/api/v1/service-categories/{id}", consumes = MediaType.APPLICATION_JSON_VALUE)
+    @Operation(summary = "Update a service category (JSON)")
     public ResponseEntity<ApiResponse<CategoryResponse>> updateCategory(
             @PathVariable UUID id,
             @Valid @RequestBody UpdateCategoryRequest request,
             @AuthenticationPrincipal CustomUserDetails userDetails,
             HttpServletRequest httpRequest) {
+        CategoryResponse response = dentalServiceService.updateCategory(
+                id, request, userDetails.getUser().getId(), httpRequest);
+        return ResponseEntity.ok(ApiResponse.success("Category updated successfully", response));
+    }
+
+    @PutMapping(value = "/api/v1/service-categories/{id}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @Operation(summary = "Update a service category with icon upload (Multipart)")
+    public ResponseEntity<ApiResponse<CategoryResponse>> updateCategoryMultipart(
+            @PathVariable UUID id,
+            @ModelAttribute @Valid UpdateCategoryRequest request,
+            @RequestParam(value = "icon", required = false) MultipartFile icon,
+            @RequestParam(value = "image", required = false) MultipartFile image,
+            @RequestParam(value = "file", required = false) MultipartFile file,
+            @RequestParam(value = "iconUrl", required = false) MultipartFile iconUrlFile,
+            @AuthenticationPrincipal CustomUserDetails userDetails,
+            HttpServletRequest httpRequest) {
+        MultipartFile uploadFile = icon != null ? icon :
+                (image != null ? image : (file != null ? file : iconUrlFile));
+        if (uploadFile != null && !uploadFile.isEmpty()) {
+            String storedUrl = fileStorageService.storeFile(uploadFile, "categories");
+            request.setIconUrl(storedUrl);
+        }
         CategoryResponse response = dentalServiceService.updateCategory(
                 id, request, userDetails.getUser().getId(), httpRequest);
         return ResponseEntity.ok(ApiResponse.success("Category updated successfully", response));
@@ -85,8 +134,8 @@ public class ServiceAdminController {
         return ResponseEntity.ok(ApiResponse.success(pagedResponse));
     }
 
-    @PostMapping("/api/v1/services")
-    @Operation(summary = "Create a new dental service")
+    @PostMapping(value = "/api/v1/services", consumes = MediaType.APPLICATION_JSON_VALUE)
+    @Operation(summary = "Create a new dental service (JSON)")
     public ResponseEntity<ApiResponse<ServiceResponse>> createService(
             @Valid @RequestBody CreateServiceRequest request,
             @AuthenticationPrincipal CustomUserDetails userDetails,
@@ -97,13 +146,53 @@ public class ServiceAdminController {
                 .body(ApiResponse.success("Service created successfully", response));
     }
 
-    @PutMapping("/api/v1/services/{id}")
-    @Operation(summary = "Update a dental service")
+    @PostMapping(value = "/api/v1/services", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @Operation(summary = "Create a new dental service with image upload (Multipart)")
+    public ResponseEntity<ApiResponse<ServiceResponse>> createServiceMultipart(
+            @ModelAttribute @Valid CreateServiceRequest request,
+            @RequestParam(value = "image", required = false) MultipartFile image,
+            @RequestParam(value = "file", required = false) MultipartFile file,
+            @RequestParam(value = "imageUrl", required = false) MultipartFile imageUrlFile,
+            @AuthenticationPrincipal CustomUserDetails userDetails,
+            HttpServletRequest httpRequest) {
+        MultipartFile uploadFile = image != null ? image : (file != null ? file : imageUrlFile);
+        if (uploadFile != null && !uploadFile.isEmpty()) {
+            String storedUrl = fileStorageService.storeFile(uploadFile, "services");
+            request.setImageUrl(storedUrl);
+        }
+        ServiceResponse response = dentalServiceService.createService(
+                request, userDetails.getUser().getId(), httpRequest);
+        return ResponseEntity.status(HttpStatus.CREATED)
+                .body(ApiResponse.success("Service created successfully", response));
+    }
+
+    @PutMapping(value = "/api/v1/services/{id}", consumes = MediaType.APPLICATION_JSON_VALUE)
+    @Operation(summary = "Update a dental service (JSON)")
     public ResponseEntity<ApiResponse<ServiceResponse>> updateService(
             @PathVariable UUID id,
             @Valid @RequestBody UpdateServiceRequest request,
             @AuthenticationPrincipal CustomUserDetails userDetails,
             HttpServletRequest httpRequest) {
+        ServiceResponse response = dentalServiceService.updateService(
+                id, request, userDetails.getUser().getId(), httpRequest);
+        return ResponseEntity.ok(ApiResponse.success("Service updated successfully", response));
+    }
+
+    @PutMapping(value = "/api/v1/services/{id}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @Operation(summary = "Update a dental service with image upload (Multipart)")
+    public ResponseEntity<ApiResponse<ServiceResponse>> updateServiceMultipart(
+            @PathVariable UUID id,
+            @ModelAttribute @Valid UpdateServiceRequest request,
+            @RequestParam(value = "image", required = false) MultipartFile image,
+            @RequestParam(value = "file", required = false) MultipartFile file,
+            @RequestParam(value = "imageUrl", required = false) MultipartFile imageUrlFile,
+            @AuthenticationPrincipal CustomUserDetails userDetails,
+            HttpServletRequest httpRequest) {
+        MultipartFile uploadFile = image != null ? image : (file != null ? file : imageUrlFile);
+        if (uploadFile != null && !uploadFile.isEmpty()) {
+            String storedUrl = fileStorageService.storeFile(uploadFile, "services");
+            request.setImageUrl(storedUrl);
+        }
         ServiceResponse response = dentalServiceService.updateService(
                 id, request, userDetails.getUser().getId(), httpRequest);
         return ResponseEntity.ok(ApiResponse.success("Service updated successfully", response));

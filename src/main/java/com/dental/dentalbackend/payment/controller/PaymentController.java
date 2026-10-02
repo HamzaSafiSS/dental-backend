@@ -17,8 +17,11 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import com.dental.dentalbackend.storage.service.FileStorageService;
+import org.springframework.http.MediaType;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.UUID;
 
@@ -29,15 +32,42 @@ import java.util.UUID;
 public class PaymentController {
 
     private final PaymentService paymentService;
+    private final FileStorageService fileStorageService;
 
-    @PostMapping("/appointments/{appointmentId}/submit")
+    @PostMapping(value = "/appointments/{appointmentId}/submit", consumes = MediaType.APPLICATION_JSON_VALUE)
     @PreAuthorize("hasRole('PATIENT')")
-    @Operation(summary = "Submit payment proof for an appointment")
+    @Operation(summary = "Submit payment proof for an appointment (JSON)")
     public ResponseEntity<ApiResponse<PaymentResponse>> submitPayment(
             @PathVariable UUID appointmentId,
             @Valid @RequestBody SubmitPaymentRequest request,
             @AuthenticationPrincipal CustomUserDetails userDetails,
             HttpServletRequest httpRequest) {
+        PaymentResponse response = paymentService.submitPayment(
+            appointmentId, request, userDetails.getUser().getId(), httpRequest);
+        return ResponseEntity.ok(ApiResponse.success("Payment proof submitted", response));
+    }
+
+    @PostMapping(value = "/appointments/{appointmentId}/submit", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @PreAuthorize("hasRole('PATIENT')")
+    @Operation(summary = "Submit payment proof for an appointment with screenshot upload (Multipart)")
+    public ResponseEntity<ApiResponse<PaymentResponse>> submitPaymentMultipart(
+            @PathVariable UUID appointmentId,
+            @ModelAttribute @Valid SubmitPaymentRequest request,
+            @RequestParam(value = "screenshot", required = false) MultipartFile screenshot,
+            @RequestParam(value = "paymentScreenshot", required = false) MultipartFile paymentScreenshot,
+            @RequestParam(value = "paymentScreenshotUrl", required = false) MultipartFile paymentScreenshotUrlFile,
+            @RequestParam(value = "image", required = false) MultipartFile image,
+            @RequestParam(value = "file", required = false) MultipartFile file,
+            @AuthenticationPrincipal CustomUserDetails userDetails,
+            HttpServletRequest httpRequest) {
+        MultipartFile uploadFile = screenshot != null ? screenshot :
+                (paymentScreenshot != null ? paymentScreenshot :
+                (paymentScreenshotUrlFile != null ? paymentScreenshotUrlFile :
+                (image != null ? image : file)));
+        if (uploadFile != null && !uploadFile.isEmpty()) {
+            String screenshotUrl = fileStorageService.storeFile(uploadFile, "payments");
+            request.setPaymentScreenshotUrl(screenshotUrl);
+        }
         PaymentResponse response = paymentService.submitPayment(
                 appointmentId, request, userDetails.getUser().getId(), httpRequest);
         return ResponseEntity.ok(ApiResponse.success("Payment proof submitted", response));
