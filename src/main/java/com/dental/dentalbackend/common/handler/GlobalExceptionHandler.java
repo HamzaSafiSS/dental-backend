@@ -140,6 +140,13 @@ public class GlobalExceptionHandler {
                 .body(ApiResponse.error("HTTP method " + ex.getMethod() + " is not supported for this endpoint"));
     }
 
+    @ExceptionHandler(org.springframework.web.HttpMediaTypeNotSupportedException.class)
+    public ResponseEntity<ApiResponse<Void>> handleMediaTypeNotSupported(org.springframework.web.HttpMediaTypeNotSupportedException ex) {
+        return ResponseEntity
+                .status(HttpStatus.UNSUPPORTED_MEDIA_TYPE)
+                .body(ApiResponse.error("Content-Type '" + ex.getContentType() + "' is not supported. Supported media types: " + ex.getSupportedMediaTypes()));
+    }
+
     // ── Catch-All ───────────────────────────────────────────────────
 
     @ExceptionHandler(Exception.class)

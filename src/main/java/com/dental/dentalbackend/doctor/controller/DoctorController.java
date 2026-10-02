@@ -22,6 +22,10 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
+import com.dental.dentalbackend.storage.service.FileStorageService;
+import org.springframework.http.MediaType;
+import org.springframework.web.multipart.MultipartFile;
+
 import java.util.UUID;
 
 @RestController
@@ -31,6 +35,7 @@ import java.util.UUID;
 public class DoctorController {
 
     private final DoctorService doctorService;
+    private final FileStorageService fileStorageService;
 
     // ── Doctor self-service ───────────────────────────────────────
 
@@ -72,13 +77,36 @@ public class DoctorController {
         return ResponseEntity.ok(ApiResponse.success(pagedResponse));
     }
 
-    @PostMapping
+    @PostMapping(consumes = MediaType.APPLICATION_JSON_VALUE)
     @PreAuthorize("hasRole('ADMIN')")
-    @Operation(summary = "Create a new doctor account")
+    @Operation(summary = "Create a new doctor account (JSON)")
     public ResponseEntity<ApiResponse<DoctorResponse>> createDoctor(
             @Valid @RequestBody CreateDoctorRequest request,
             @AuthenticationPrincipal CustomUserDetails userDetails,
             HttpServletRequest httpRequest) {
+        DoctorResponse response = doctorService.createDoctor(
+                request, userDetails.getUser().getId(), httpRequest);
+        return ResponseEntity.status(HttpStatus.CREATED)
+                .body(ApiResponse.success("Doctor created successfully", response));
+    }
+
+    @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @PreAuthorize("hasRole('ADMIN')")
+    @Operation(summary = "Create a new doctor account with profile image upload (Multipart)")
+    public ResponseEntity<ApiResponse<DoctorResponse>> createDoctorMultipart(
+            @ModelAttribute @Valid CreateDoctorRequest request,
+            @RequestParam(value = "profileImage", required = false) MultipartFile profileImage,
+            @RequestParam(value = "image", required = false) MultipartFile image,
+            @RequestParam(value = "file", required = false) MultipartFile file,
+            @RequestParam(value = "profileImageUrl", required = false) MultipartFile profileImageUrlFile,
+            @AuthenticationPrincipal CustomUserDetails userDetails,
+            HttpServletRequest httpRequest) {
+        MultipartFile uploadFile = profileImage != null ? profileImage :
+                (image != null ? image : (file != null ? file : profileImageUrlFile));
+        if (uploadFile != null && !uploadFile.isEmpty()) {
+            String imageUrl = fileStorageService.storeFile(uploadFile, "doctors");
+            request.setProfileImageUrl(imageUrl);
+        }
         DoctorResponse response = doctorService.createDoctor(
                 request, userDetails.getUser().getId(), httpRequest);
         return ResponseEntity.status(HttpStatus.CREATED)
@@ -93,14 +121,37 @@ public class DoctorController {
         return ResponseEntity.ok(ApiResponse.success(response));
     }
 
-    @PutMapping("/{id}")
+    @PutMapping(value = "/{id}", consumes = MediaType.APPLICATION_JSON_VALUE)
     @PreAuthorize("hasRole('ADMIN')")
-    @Operation(summary = "Update doctor profile")
+    @Operation(summary = "Update doctor profile (JSON)")
     public ResponseEntity<ApiResponse<DoctorResponse>> updateDoctor(
             @PathVariable UUID id,
             @Valid @RequestBody UpdateDoctorRequest request,
             @AuthenticationPrincipal CustomUserDetails userDetails,
             HttpServletRequest httpRequest) {
+        DoctorResponse response = doctorService.updateDoctor(
+                id, request, userDetails.getUser().getId(), httpRequest);
+        return ResponseEntity.ok(ApiResponse.success("Doctor updated successfully", response));
+    }
+
+    @PutMapping(value = "/{id}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @PreAuthorize("hasRole('ADMIN')")
+    @Operation(summary = "Update doctor profile with profile image upload (Multipart)")
+    public ResponseEntity<ApiResponse<DoctorResponse>> updateDoctorMultipart(
+            @PathVariable UUID id,
+            @ModelAttribute @Valid UpdateDoctorRequest request,
+            @RequestParam(value = "profileImage", required = false) MultipartFile profileImage,
+            @RequestParam(value = "image", required = false) MultipartFile image,
+            @RequestParam(value = "file", required = false) MultipartFile file,
+            @RequestParam(value = "profileImageUrl", required = false) MultipartFile profileImageUrlFile,
+            @AuthenticationPrincipal CustomUserDetails userDetails,
+            HttpServletRequest httpRequest) {
+        MultipartFile uploadFile = profileImage != null ? profileImage :
+                (image != null ? image : (file != null ? file : profileImageUrlFile));
+        if (uploadFile != null && !uploadFile.isEmpty()) {
+            String imageUrl = fileStorageService.storeFile(uploadFile, "doctors");
+            request.setProfileImageUrl(imageUrl);
+        }
         DoctorResponse response = doctorService.updateDoctor(
                 id, request, userDetails.getUser().getId(), httpRequest);
         return ResponseEntity.ok(ApiResponse.success("Doctor updated successfully", response));

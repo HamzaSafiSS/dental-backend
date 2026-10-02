@@ -58,6 +58,8 @@ public class SecurityConfig {
                         ).permitAll()
                         // Actuator
                         .requestMatchers("/actuator/**").permitAll()
+                        // Uploaded static assets (doctor photos, images, etc.)
+                        .requestMatchers("/uploads/**").permitAll()
                         // Everything else requires authentication
                         .anyRequest().authenticated()
                 )

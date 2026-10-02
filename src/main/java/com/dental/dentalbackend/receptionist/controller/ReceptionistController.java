@@ -22,6 +22,10 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
+import com.dental.dentalbackend.storage.service.FileStorageService;
+import org.springframework.http.MediaType;
+import org.springframework.web.multipart.MultipartFile;
+
 import java.util.UUID;
 
 @RestController
@@ -32,6 +36,7 @@ import java.util.UUID;
 public class ReceptionistController {
 
     private final ReceptionistService receptionistService;
+    private final FileStorageService fileStorageService;
 
     @GetMapping
     @Operation(summary = "List all receptionists (paginated)")
@@ -57,12 +62,34 @@ public class ReceptionistController {
         return ResponseEntity.ok(ApiResponse.success(pagedResponse));
     }
 
-    @PostMapping
-    @Operation(summary = "Create a new receptionist account")
+    @PostMapping(consumes = MediaType.APPLICATION_JSON_VALUE)
+    @Operation(summary = "Create a new receptionist account (JSON)")
     public ResponseEntity<ApiResponse<ReceptionistResponse>> createReceptionist(
             @Valid @RequestBody CreateReceptionistRequest request,
             @AuthenticationPrincipal CustomUserDetails userDetails,
             HttpServletRequest httpRequest) {
+        ReceptionistResponse response = receptionistService.createReceptionist(
+                request, userDetails.getUser().getId(), httpRequest);
+        return ResponseEntity.status(HttpStatus.CREATED)
+                .body(ApiResponse.success("Receptionist created successfully", response));
+    }
+
+    @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @Operation(summary = "Create a new receptionist account with image upload (Multipart)")
+    public ResponseEntity<ApiResponse<ReceptionistResponse>> createReceptionistMultipart(
+            @ModelAttribute @Valid CreateReceptionistRequest request,
+            @RequestParam(value = "profileImage", required = false) MultipartFile profileImage,
+            @RequestParam(value = "image", required = false) MultipartFile image,
+            @RequestParam(value = "file", required = false) MultipartFile file,
+            @RequestParam(value = "profileImageUrl", required = false) MultipartFile profileImageUrlFile,
+            @AuthenticationPrincipal CustomUserDetails userDetails,
+            HttpServletRequest httpRequest) {
+        MultipartFile uploadFile = profileImage != null ? profileImage :
+                (image != null ? image : (file != null ? file : profileImageUrlFile));
+        if (uploadFile != null && !uploadFile.isEmpty()) {
+            String imageUrl = fileStorageService.storeFile(uploadFile, "staff");
+            request.setProfileImageUrl(imageUrl);
+        }
         ReceptionistResponse response = receptionistService.createReceptionist(
                 request, userDetails.getUser().getId(), httpRequest);
         return ResponseEntity.status(HttpStatus.CREATED)
@@ -76,13 +103,35 @@ public class ReceptionistController {
         return ResponseEntity.ok(ApiResponse.success(response));
     }
 
-    @PutMapping("/{id}")
-    @Operation(summary = "Update receptionist")
+    @PutMapping(value = "/{id}", consumes = MediaType.APPLICATION_JSON_VALUE)
+    @Operation(summary = "Update receptionist (JSON)")
     public ResponseEntity<ApiResponse<ReceptionistResponse>> updateReceptionist(
             @PathVariable UUID id,
             @Valid @RequestBody UpdateReceptionistRequest request,
             @AuthenticationPrincipal CustomUserDetails userDetails,
             HttpServletRequest httpRequest) {
+        ReceptionistResponse response = receptionistService.updateReceptionist(
+                id, request, userDetails.getUser().getId(), httpRequest);
+        return ResponseEntity.ok(ApiResponse.success("Receptionist updated successfully", response));
+    }
+
+    @PutMapping(value = "/{id}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @Operation(summary = "Update receptionist with image upload (Multipart)")
+    public ResponseEntity<ApiResponse<ReceptionistResponse>> updateReceptionistMultipart(
+            @PathVariable UUID id,
+            @ModelAttribute @Valid UpdateReceptionistRequest request,
+            @RequestParam(value = "profileImage", required = false) MultipartFile profileImage,
+            @RequestParam(value = "image", required = false) MultipartFile image,
+            @RequestParam(value = "file", required = false) MultipartFile file,
+            @RequestParam(value = "profileImageUrl", required = false) MultipartFile profileImageUrlFile,
+            @AuthenticationPrincipal CustomUserDetails userDetails,
+            HttpServletRequest httpRequest) {
+        MultipartFile uploadFile = profileImage != null ? profileImage :
+                (image != null ? image : (file != null ? file : profileImageUrlFile));
+        if (uploadFile != null && !uploadFile.isEmpty()) {
+            String imageUrl = fileStorageService.storeFile(uploadFile, "staff");
+            request.setProfileImageUrl(imageUrl);
+        }
         ReceptionistResponse response = receptionistService.updateReceptionist(
                 id, request, userDetails.getUser().getId(), httpRequest);
         return ResponseEntity.ok(ApiResponse.success("Receptionist updated successfully", response));
