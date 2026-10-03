@@ -6,6 +6,7 @@ import com.dental.dentalbackend.content.dto.*;
 import com.dental.dentalbackend.content.entity.BlogPostStatus;
 import com.dental.dentalbackend.content.service.BlogService;
 import com.dental.dentalbackend.security.CustomUserDetails;
+import com.dental.dentalbackend.storage.service.FileStorageService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletRequest;
@@ -16,10 +17,12 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 import java.util.UUID;
@@ -31,6 +34,7 @@ import java.util.UUID;
 public class BlogAdminController {
 
     private final BlogService blogService;
+    private final FileStorageService fileStorageService;
 
     // ── Posts ─────────────────────────────────────────────────────────────
 
@@ -63,8 +67,8 @@ public class BlogAdminController {
         return ResponseEntity.ok(ApiResponse.success(response));
     }
 
-    @PostMapping("/api/v1/blog")
-    @Operation(summary = "Create a new blog post")
+    @PostMapping(value = "/api/v1/blog", consumes = MediaType.APPLICATION_JSON_VALUE)
+    @Operation(summary = "Create a new blog post (JSON)")
     public ResponseEntity<ApiResponse<BlogPostDetailResponse>> createPost(
             @Valid @RequestBody CreateBlogPostRequest request,
             @AuthenticationPrincipal CustomUserDetails userDetails,
@@ -75,13 +79,53 @@ public class BlogAdminController {
                 .body(ApiResponse.success("Blog post created successfully", response));
     }
 
-    @PutMapping("/api/v1/blog/{id}")
-    @Operation(summary = "Update a blog post")
+    @PostMapping(value = "/api/v1/blog", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @Operation(summary = "Create a new blog post with image upload (Multipart)")
+    public ResponseEntity<ApiResponse<BlogPostDetailResponse>> createPostMultipart(
+            @ModelAttribute @Valid CreateBlogPostRequest request,
+            @RequestParam(value = "image", required = false) MultipartFile image,
+            @RequestParam(value = "file", required = false) MultipartFile file,
+            @RequestParam(value = "featuredImage", required = false) MultipartFile featuredImage,
+            @AuthenticationPrincipal CustomUserDetails userDetails,
+            HttpServletRequest httpRequest) {
+        MultipartFile uploadFile = image != null ? image : (file != null ? file : featuredImage);
+        if (uploadFile != null && !uploadFile.isEmpty()) {
+            String storedUrl = fileStorageService.storeFile(uploadFile, "blog");
+            request.setFeaturedImageUrl(storedUrl);
+        }
+        BlogPostDetailResponse response = blogService.createPost(
+                request, userDetails.getUser().getId(), httpRequest);
+        return ResponseEntity.status(HttpStatus.CREATED)
+                .body(ApiResponse.success("Blog post created successfully", response));
+    }
+
+    @PutMapping(value = "/api/v1/blog/{id}", consumes = MediaType.APPLICATION_JSON_VALUE)
+    @Operation(summary = "Update a blog post (JSON)")
     public ResponseEntity<ApiResponse<BlogPostDetailResponse>> updatePost(
             @PathVariable UUID id,
             @Valid @RequestBody UpdateBlogPostRequest request,
             @AuthenticationPrincipal CustomUserDetails userDetails,
             HttpServletRequest httpRequest) {
+        BlogPostDetailResponse response = blogService.updatePost(
+                id, request, userDetails.getUser().getId(), httpRequest);
+        return ResponseEntity.ok(ApiResponse.success("Blog post updated successfully", response));
+    }
+
+    @PutMapping(value = "/api/v1/blog/{id}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @Operation(summary = "Update a blog post with image upload (Multipart)")
+    public ResponseEntity<ApiResponse<BlogPostDetailResponse>> updatePostMultipart(
+            @PathVariable UUID id,
+            @ModelAttribute @Valid UpdateBlogPostRequest request,
+            @RequestParam(value = "image", required = false) MultipartFile image,
+            @RequestParam(value = "file", required = false) MultipartFile file,
+            @RequestParam(value = "featuredImage", required = false) MultipartFile featuredImage,
+            @AuthenticationPrincipal CustomUserDetails userDetails,
+            HttpServletRequest httpRequest) {
+        MultipartFile uploadFile = image != null ? image : (file != null ? file : featuredImage);
+        if (uploadFile != null && !uploadFile.isEmpty()) {
+            String storedUrl = fileStorageService.storeFile(uploadFile, "blog");
+            request.setFeaturedImageUrl(storedUrl);
+        }
         BlogPostDetailResponse response = blogService.updatePost(
                 id, request, userDetails.getUser().getId(), httpRequest);
         return ResponseEntity.ok(ApiResponse.success("Blog post updated successfully", response));
