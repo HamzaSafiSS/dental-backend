@@ -27,6 +27,11 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import jakarta.persistence.criteria.Predicate;
+import org.springframework.data.jpa.domain.Specification;
+
+import java.util.ArrayList;
+import java.util.List;
 
 import java.time.LocalDate;
 import java.time.LocalTime;
@@ -188,7 +193,29 @@ public class AppointmentService {
     public Page<AppointmentResponse> listAppointments(AppointmentStatus status, UUID doctorId,
                                                         UUID patientId, LocalDate fromDate,
                                                         LocalDate toDate, Pageable pageable) {
-        return appointmentRepository.findFiltered(status, doctorId, patientId, fromDate, toDate, pageable)
+        Specification<Appointment> spec = (root, query, cb) -> {
+            List<Predicate> predicates = new ArrayList<>();
+
+            if (status != null) {
+                predicates.add(cb.equal(root.get("status"), status));
+            }
+            if (doctorId != null) {
+                predicates.add(cb.equal(root.get("doctor").get("id"), doctorId));
+            }
+            if (patientId != null) {
+                predicates.add(cb.equal(root.get("patient").get("id"), patientId));
+            }
+            if (fromDate != null) {
+                predicates.add(cb.greaterThanOrEqualTo(root.get("appointmentDate"), fromDate));
+            }
+            if (toDate != null) {
+                predicates.add(cb.lessThanOrEqualTo(root.get("appointmentDate"), toDate));
+            }
+
+            return predicates.isEmpty() ? cb.conjunction() : cb.and(predicates.toArray(new Predicate[0]));
+        };
+
+        return appointmentRepository.findAll(spec, pageable)
                 .map(this::mapToResponse);
     }
 

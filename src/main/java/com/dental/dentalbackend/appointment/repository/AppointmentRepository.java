@@ -5,6 +5,7 @@ import com.dental.dentalbackend.appointment.entity.AppointmentStatus;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
 
@@ -14,7 +15,7 @@ import java.util.List;
 import java.util.UUID;
 
 @Repository
-public interface AppointmentRepository extends JpaRepository<Appointment, UUID> {
+public interface AppointmentRepository extends JpaRepository<Appointment, UUID>, JpaSpecificationExecutor<Appointment> {
 
     Page<Appointment> findAllByPatientId(UUID patientId, Pageable pageable);
 
@@ -37,23 +38,6 @@ public interface AppointmentRepository extends JpaRepository<Appointment, UUID> 
             """)
     boolean existsActiveAppointmentAtSlot(UUID doctorId, LocalDate date, LocalTime startTime);
 
-    @Query("""
-            SELECT a FROM Appointment a
-            WHERE (:status IS NULL OR a.status = :status)
-              AND (:doctorId IS NULL OR a.doctor.id = :doctorId)
-              AND (:patientId IS NULL OR a.patient.id = :patientId)
-              AND (:fromDate IS NULL OR a.appointmentDate >= :fromDate)
-              AND (:toDate IS NULL OR a.appointmentDate <= :toDate)
-            ORDER BY a.appointmentDate DESC, a.startTime DESC
-            """)
-    Page<Appointment> findFiltered(
-            AppointmentStatus status,
-            UUID doctorId,
-            UUID patientId,
-            LocalDate fromDate,
-            LocalDate toDate,
-            Pageable pageable
-    );
 
     long countByStatus(AppointmentStatus status);
 

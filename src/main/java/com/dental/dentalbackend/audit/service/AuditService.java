@@ -14,7 +14,12 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
+import jakarta.persistence.criteria.Predicate;
+import org.springframework.data.jpa.domain.Specification;
+
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.UUID;
 
 @Slf4j
@@ -64,8 +69,29 @@ public class AuditService {
     @Transactional(readOnly = true)
     public Page<AuditLogResponse> getAuditLogs(String action, String entityType, UUID userId,
                                                 LocalDateTime from, LocalDateTime to, Pageable pageable) {
-        return auditLogRepository.findFiltered(action, entityType, userId, from, to, pageable)
-                .map(this::mapToResponse);
+        Specification<AuditLog> spec = (root, query, cb) -> {
+            List<Predicate> predicates = new ArrayList<>();
+
+            if (action != null && !action.isBlank()) {
+                predicates.add(cb.equal(root.get("action"), action));
+            }
+            if (entityType != null && !entityType.isBlank()) {
+                predicates.add(cb.equal(root.get("entityType"), entityType));
+            }
+            if (userId != null) {
+                predicates.add(cb.equal(root.get("user").get("id"), userId));
+            }
+            if (from != null) {
+                predicates.add(cb.greaterThanOrEqualTo(root.get("createdAt"), from));
+            }
+            if (to != null) {
+                predicates.add(cb.lessThanOrEqualTo(root.get("createdAt"), to));
+            }
+
+            return predicates.isEmpty() ? cb.conjunction() : cb.and(predicates.toArray(new Predicate[0]));
+        };
+
+        return auditLogRepository.findAll(spec, pageable).map(this::mapToResponse);
     }
 
     private AuditLogResponse mapToResponse(AuditLog auditLog) {
