@@ -2,10 +2,13 @@ package com.dental.dentalbackend.content.controller;
 
 import com.dental.dentalbackend.common.dto.ApiResponse;
 import com.dental.dentalbackend.common.dto.PagedResponse;
+import com.dental.dentalbackend.content.dto.GuestReviewRequest;
 import com.dental.dentalbackend.content.dto.ReviewResponse;
+import com.dental.dentalbackend.content.service.ReviewEmailService;
 import com.dental.dentalbackend.content.service.ReviewService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -17,10 +20,11 @@ import org.springframework.web.bind.annotation.*;
 @RestController
 @RequestMapping("/api/v1/public/reviews")
 @RequiredArgsConstructor
-@Tag(name = "Public Reviews", description = "Public-facing approved reviews")
+@Tag(name = "Public Reviews", description = "Public-facing approved reviews and guest review submission")
 public class PublicReviewController {
 
     private final ReviewService reviewService;
+    private final ReviewEmailService reviewEmailService;
 
     @GetMapping
     @Operation(summary = "List approved patient reviews (paginated, optional featured filter)")
@@ -42,4 +46,17 @@ public class PublicReviewController {
 
         return ResponseEntity.ok(ApiResponse.success(pagedResponse));
     }
+
+    @PostMapping
+    @Operation(summary = "Submit a review as a guest visitor",
+            description = "Sends an email notification to the clinic with the review details. No authentication required.")
+    public ResponseEntity<ApiResponse<Void>> submitGuestReview(@Valid @RequestBody GuestReviewRequest request) {
+
+        reviewEmailService.sendGuestReviewNotificationToClinic(request);
+
+        return ResponseEntity.ok(
+                ApiResponse.success("Thank you for your review! It has been submitted successfully.")
+        );
+    }
 }
+

@@ -38,6 +38,9 @@ class ReviewServiceTest {
     private AuditService auditService;
 
     @Mock
+    private ReviewEmailService reviewEmailService;
+
+    @Mock
     private HttpServletRequest httpRequest;
 
     @InjectMocks

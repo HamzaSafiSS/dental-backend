@@ -28,6 +28,7 @@ public class ReviewService {
     private final ReviewRepository reviewRepository;
     private final PatientRepository patientRepository;
     private final AuditService auditService;
+    private final ReviewEmailService reviewEmailService;
 
     @Transactional
     public ReviewResponse submitReview(UUID patientUserId, SubmitReviewRequest request, HttpServletRequest httpRequest) {
@@ -45,6 +46,8 @@ public class ReviewService {
 
         auditService.log(patientUserId, "REVIEW_SUBMITTED", "Review", review.getId(),
                 "Patient submitted review with rating " + review.getRating(), httpRequest);
+
+        reviewEmailService.sendNewReviewNotificationToClinic(review);
 
         return mapReviewResponse(review, false);
     }
