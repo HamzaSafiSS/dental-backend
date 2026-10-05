@@ -34,3 +34,4 @@ build/
 
 ### Uploaded media ###
 uploads/
+.env

@@ -31,6 +31,11 @@ services:
       DATABASE_USERNAME: ramadan
       DATABASE_PASSWORD: ramadan1111
       JWT_SECRET: ZGVudGFsLWNsaW5pYy1tYW5hZ2VtZW50LXN5c3RlbS1qd3Qtc2VjcmV0LWtleS0yMDI0LXByb2R1Y3Rpb24=
+      SMTP_HOST: ${SMTP_HOST}
+      SMTP_PORT: ${SMTP_PORT}
+      SMTP_USER: ${SMTP_USER}
+      SMTP_PASS: ${SMTP_PASS}
+      MAIL_FROM: ${MAIL_FROM:-noreply@dental-clinic.com}
     ports:
       - "8080:8080"
     restart: unless-stopped
