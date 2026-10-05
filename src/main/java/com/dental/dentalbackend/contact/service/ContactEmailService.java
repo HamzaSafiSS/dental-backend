@@ -137,9 +137,7 @@ public class ContactEmailService {
                 Best regards,
                 Bright Smiles Dental Care Team
                 """.formatted(
-                req.getName(),
-                req.getSubject(),
-                req.getMessage()
+                req.getName()
         );
     }
 }

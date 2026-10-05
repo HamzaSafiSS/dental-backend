@@ -49,6 +49,7 @@ public class AppointmentService {
     private final DentalServiceRepository dentalServiceRepository;
     private final UserRepository userRepository;
     private final AuditService auditService;
+    private final AppointmentEmailService appointmentEmailService;
 
     // ── Create appointment ────────────────────────────────────────
 
@@ -114,6 +115,9 @@ public class AppointmentService {
 
         log.info("Appointment created: {} for patient {}", appointment.getId(), patient.getUser().getEmail());
 
+        // Notify clinic (admin) of the new appointment
+        appointmentEmailService.sendNewAppointmentNotificationToClinic(appointment);
+
         return mapToResponse(appointment);
     }
 
@@ -167,6 +171,9 @@ public class AppointmentService {
 
         auditService.log(performedBy, "APPOINTMENT_CREATED", "Appointment", appointment.getId(),
                 "Appointment created by staff for patient " + patient.getUser().getEmail(), httpRequest);
+
+        // Notify clinic (admin) of the new appointment
+        appointmentEmailService.sendNewAppointmentNotificationToClinic(appointment);
 
         return mapToResponse(appointment);
     }
