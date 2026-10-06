@@ -11,6 +11,8 @@ import com.dental.dentalbackend.dashboard.dto.RecentActivityResponse;
 import com.dental.dentalbackend.doctor.repository.DoctorRepository;
 import com.dental.dentalbackend.patient.repository.PatientRepository;
 import com.dental.dentalbackend.payment.repository.AppointmentPaymentRepository;
+import com.dental.dentalbackend.user.entity.Role;
+import com.dental.dentalbackend.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
@@ -40,12 +42,14 @@ public class DashboardService {
     private final AppointmentRepository appointmentRepository;
     private final AppointmentPaymentRepository paymentRepository;
     private final AuditLogRepository auditLogRepository;
+    private final UserRepository userRepository;
 
     @Transactional(readOnly = true)
     public DashboardStatsResponse getStats() {
         long totalPatients = patientRepository.count();
         long totalDoctors = doctorRepository.count();
         long activeDoctors = doctorRepository.countByActiveTrue();
+        long activeReceptionists = userRepository.countByRoleAndActiveTrue(Role.RECEPTIONIST);
 
         Map<String, Long> statusCounts = new LinkedHashMap<>();
         for (AppointmentStatus status : AppointmentStatus.values()) {
@@ -74,6 +78,7 @@ public class DashboardService {
                 .totalPatients(totalPatients)
                 .totalDoctors(totalDoctors)
                 .activeDoctors(activeDoctors)
+                .activeReceptionists(activeReceptionists)
                 .appointmentsByStatus(statusCounts)
                 .totalRevenue(totalRevenue != null ? totalRevenue : BigDecimal.ZERO)
                 .todayRevenue(todayRevenue != null ? todayRevenue : BigDecimal.ZERO)

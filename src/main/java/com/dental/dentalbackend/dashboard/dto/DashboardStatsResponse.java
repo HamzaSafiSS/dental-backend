@@ -17,6 +17,7 @@ public class DashboardStatsResponse {
     private long totalPatients;
     private long totalDoctors;
     private long activeDoctors;
+    private long activeReceptionists;
     private Map<String, Long> appointmentsByStatus;
     private BigDecimal totalRevenue;
     private BigDecimal todayRevenue;
