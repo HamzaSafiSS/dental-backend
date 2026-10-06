@@ -120,8 +120,8 @@ public class AppointmentEmailService {
 
     private String buildGuestClinicBody(GuestAppointmentRequest req) {
         return """
-                A new appointment REQUEST has been submitted by an unauthenticated visitor.
-                You may need to contact them to confirm and officially schedule this in the system.
+                A new appointment REQUEST has been submitted by an authenticated patient.
+                Please review the details and confirm or officially schedule this in the system.
 
                 ─────────────────────────────────────
                 Patient Name   : %s
@@ -147,7 +147,7 @@ public class AppointmentEmailService {
                 req.getEmail(),
                 req.getPhone() != null ? req.getPhone() : "—",
                 req.getDob() != null ? req.getDob() : "—",
-                "returning".equalsIgnoreCase(req.getPatientType()) ? "Returning Patient" : "New Patient",
+                ("returning".equalsIgnoreCase(req.getPatientType()) || "existing".equalsIgnoreCase(req.getPatientType())) ? "Returning Patient" : "New Patient",
                 req.getContactMethod(),
                 req.getDate(),
                 req.getTime(),
