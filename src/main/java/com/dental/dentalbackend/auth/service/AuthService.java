@@ -170,7 +170,20 @@ public class AuthService {
 
         log.info("Password reset successful for user: {}", user.getEmail());
     }
+    @Transactional
+    public void changePassword(User user, ChangePasswordRequest request) {
+        if (!passwordEncoder.matches(request.getCurrentPassword(), user.getPasswordHash())) {
+            throw new BusinessRuleException("Current password is incorrect");
+        }
 
+        user.setPasswordHash(passwordEncoder.encode(request.getNewPassword()));
+        userRepository.save(user);
+
+        // Revoke all refresh tokens for security
+        refreshTokenRepository.revokeAllByUserId(user.getId());
+
+        log.info("Password changed successful for user: {}", user.getEmail());
+    }
     public UserResponse getCurrentUser(User user) {
         return mapToUserResponse(user);
     }

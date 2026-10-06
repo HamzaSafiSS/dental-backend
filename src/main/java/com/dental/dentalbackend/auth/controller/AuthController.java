@@ -69,6 +69,15 @@ public class AuthController {
         return ResponseEntity.ok(ApiResponse.success("Password reset successful"));
     }
 
+    @PostMapping("/change-password")
+    @Operation(summary = "Change password for the currently authenticated user")
+    public ResponseEntity<ApiResponse<Void>> changePassword(
+            @AuthenticationPrincipal CustomUserDetails userDetails,
+            @Valid @RequestBody ChangePasswordRequest request) {
+        authService.changePassword(userDetails.getUser(), request);
+        return ResponseEntity.ok(ApiResponse.success("Password changed successfully"));
+    }
+
     @GetMapping("/me")
     @Operation(summary = "Get the currently authenticated user's information")
     public ResponseEntity<ApiResponse<UserResponse>> getCurrentUser(
